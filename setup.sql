@@ -1,7 +1,7 @@
 CREATE SCHEMA `smartlocker`;
 USE `smartlocker`;
 
-CREATE TABLE `wp_lo_delivery_points` (
+CREATE TABLE `lo_delivery_points` (
   `dp_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `dp_denumire` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dp_adresa` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE `lo_locker_push` (
   `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `wp_lo_awb` (
+CREATE TABLE `lo_awb` (
   `id` int(9) NOT NULL AUTO_INCREMENT,
   `awb` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `f_token` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,

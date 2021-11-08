@@ -1,4 +1,9 @@
 <?php
+namespace LivrariOnline;
+
+use sylouuu\Curl\Method as Curl;
+use phpseclib\Crypt\AES as AES;
+use phpseclib\Crypt\RSA as RSA;
 
 class LO
 {
@@ -6,7 +11,7 @@ class LO
 	private $f_request = null;
 	private $f_secure = null;
 	private $aes_key = null;
-	private $iv = null;
+	private $iv = '285c02831e028bff';
 	private $rsa_key = null;
 
 	//definesc erorile standard: nu am putut comunica cu serverul, raspunsul de la server nu este de tip JSON. Restul de erori vin de la server
@@ -23,9 +28,11 @@ class LO
 	//setez versiunea de kit
 	public function __construct()
 	{
-		$this->version = "LO1.2";
+		$this->version = "LO2.0";
+		self::registerAutoload('phpseclib');
+		self::registerAutoload('Curl');
 		//conectare la baza de date
-		$this->conn = mysqli_connect('localhost', 'user', 'password', 'smartlocker') or die('Could not connect to DATABASE');
+//		$this->conn = mysqli_connect('localhost', 'user', 'password', 'smartlocker') or die('Could not connect to DATABASE');
 	}
 
 	//setez cheia RSA
@@ -45,23 +52,19 @@ class LO
 
 	public function encrypt_ISSN($input)
 	{
-		$iv = '285c02831e028bff';
 		$aes_key = substr($this->rsa_key, 0, 16) . substr($this->rsa_key, -16);
-		require_once('Crypt/AES_Encryption.php');
-		require_once('Crypt/padCrypt.php');
-		$aes = new AES_Encryption($aes_key, $iv, "PKCS7", "cbc");
-		$local_rez = ($aes->encrypt($input));
-		return base64_encode($local_rez);
+		$aes = new AES();
+		$aes->setIV($this->iv);
+		$aes->setKey($aes_key);
+		return base64_encode($aes->encrypt($input));
 	}
 
 	public function decrypt_ISSN($input)
 	{
-		$iv = '285c02831e028bff';
 		$aes_key = substr($this->rsa_key, 0, 16) . substr($this->rsa_key, -16);
-		require_once('Crypt/AES_Encryption.php');
-		require_once('Crypt/padCrypt.php');
-
-		$aes = new AES_Encryption($aes_key, $iv, "PKCS7", "cbc");
+		$aes = new AES();
+		$aes->setIV($this->iv);
+		$aes->setKey($aes_key);
 		$issn = $aes->decrypt(base64_decode($input));
 		return json_decode($issn);
 	}
@@ -69,6 +72,11 @@ class LO
 	//////////////////////////////////////////////////////////////
 	// 				METODE COMUNICARE CU SERVER					//
 	//////////////////////////////////////////////////////////////
+
+	public function AddOrderInNetwork($f_request)
+	{
+		return $this->LOCommunicate($f_request, 'https://api.livrarionline.ro/Lobackend.asmx/AddOrderInNetwork');
+	}
 
 	public function CancelLivrare($f_request)
 	{
@@ -90,15 +98,16 @@ class LO
 		$query = mysqli_query($this->conn, $sql);
 		$row = mysqli_fetch_array($query);
 
-		$f_request['shipTOaddress'] = array(                                                                            //Obligatoriu
-		                                                                                                                'address1'   => $row['dp_adresa'],
-		                                                                                                                'address2'   => '',
-		                                                                                                                'city'       => $row['dp_oras'],
-		                                                                                                                'state'      => $row['dp_judet'],
-		                                                                                                                'zip'        => $row['dp_cod_postal'],
-		                                                                                                                'country'    => $row['dp_tara'],
-		                                                                                                                'phone'      => '',
-		                                                                                                                'observatii' => '',
+		$f_request['shipTOaddress'] = array(
+			//Obligatoriu
+			'address1'   => $row['dp_adresa'],
+			'address2'   => '',
+			'city'       => $row['dp_oras'],
+			'state'      => $row['dp_judet'],
+			'zip'        => $row['dp_cod_postal'],
+			'country'    => $row['dp_tara'],
+			'phone'      => '',
+			'observatii' => '',
 		);
 		return $this->LOCommunicate($f_request, 'https://api.livrarionline.ro/Lobackend.asmx/GenerateAwb');
 	}
@@ -108,7 +117,7 @@ class LO
 		return $this->LOCommunicate($f_request, 'https://api.livrarionline.ro/Lobackend.asmx/RegisterAwb');
 	}
 
-	public function PrintAwb($f_request, $class)
+	public function PrintAwb($f_request, $class = '')
 	{
 		return '<a class="' . $class . '" id="print-awb" href="https://api.livrarionline.ro/Lobackend_print/PrintAwb.aspx?f_login=' . $this->f_login . '&awb=' . $f_request['awb'] . '&f_token=' . $f_request['f_token'] . '" target="_blank">Click pentru print AWB</a>';
 	}
@@ -132,15 +141,16 @@ class LO
 		$query = mysqli_query($this->conn, $sql);
 		$row = mysqli_fetch_array($query);
 
-		$f_request['shipTOaddress'] = array(//Obligatoriu
-		                                    'address1'   => $row['dp_adresa'],
-		                                    'address2'   => '',
-		                                    'city'       => $row['dp_oras'],
-		                                    'state'      => $row['dp_judet'],
-		                                    'zip'        => $row['dp_cod_postal'],
-		                                    'country'    => $row['dp_tara'],
-		                                    'phone'      => '',
-		                                    'observatii' => '',
+		$f_request['shipTOaddress'] = array(
+			//Obligatoriu
+			'address1'   => $row['dp_adresa'],
+			'address2'   => '',
+			'city'       => $row['dp_oras'],
+			'state'      => $row['dp_judet'],
+			'zip'        => $row['dp_cod_postal'],
+			'country'    => $row['dp_tara'],
+			'phone'      => '',
+			'observatii' => '',
 		);
 		return $this->LOCommunicate($f_request, 'https://estimare.livrarionline.ro/EstimarePret.asmx/EstimeazaPret');
 	}
@@ -303,7 +313,7 @@ class LO
 	// END METODA SCADERE EXPECTEDIN
 
 	// GET RESERVATION ID
-	public function get_reservationid($delivery_point_id, $cell_size = 3, $orderid)
+	public function get_reservationid($delivery_point_id, $orderid, $cell_size = 3)
 	{
 		$f_request = array();
 
@@ -364,26 +374,37 @@ class LO
 	// 						METODE PRIVATE						//
 	//////////////////////////////////////////////////////////////
 
-	//criptez f_request cu AES
+	private static function registerAutoload($classname)
+	{
+		spl_autoload_extensions('.php'); // Only Autoload PHP Files
+		spl_autoload_register(function ($classname) {
+			if (strpos($classname, '\\') !== false) {
+				// Namespaced Classes
+				$classfile = str_replace('\\', '/', $classname);
+				if ($classname[0] !== '/') {
+					$classfile = dirname(__FILE__) . '/libraries/' . $classfile . '.php';
+				}
+				require($classfile);
+			}
+		});
+	}
+
+	// criptez f_request cu AES
 	private function AESEnc()
 	{
-		require_once('Crypt/AES_Encryption.php');
-		require_once('Crypt/padCrypt.php');
-
-		$this->aes_key = md5(uniqid());
-		$this->iv = '285c02831e028bff';
-		$aes = new AES_Encryption($this->aes_key, $this->iv, "PKCS7", "cbc");
+		$this->aes_key = substr(hash('sha256', uniqid(), 0), 0, 32);
+		$aes = new AES();
+		$aes->setIV($this->iv);
+		$aes->setKey($this->aes_key);
 		$this->f_request = bin2hex(base64_encode($aes->encrypt($this->f_request)));
 	}
 
 	//criptez cheia AES cu RSA
 	private function RSAEnc()
 	{
-		require_once('Crypt/RSA.php');
-		$rsa = new Crypt_RSA();
+		$rsa = new RSA();
 		$rsa->loadKey($this->rsa_key);
-		$rsa->setPublicKey();
-		$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_PKCS1);
+		$rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
 		$this->f_secure = base64_encode($rsa->encrypt($this->aes_key));
 	}
 
@@ -442,11 +463,23 @@ class LO
 	//metoda comunicare cu server LO
 	private function LOCommunicate($f_request, $urltopost, $loapi = false)
 	{
-		require_once('curl.php');
-		$cc = new cURL();
 		$this->setFRequest($f_request);
-		$response = $cc->post($urltopost, 'loapijson=' . urlencode($this->createJSON($loapi)));
-		return $this->processResponse($response, $loapi);
+		$payload = $this->createJSON($loapi);
+		$request = new Curl\Post($urltopost, array(
+			'data'       => array(
+				'loapijson' => $payload,
+			),
+			'is_payload' => false,
+		));
+		$request->setCurlOption(CURLOPT_TIMEOUT, 30);
+		$request->send();
+
+		if ($request->getStatus() === 200) {
+			$response = $request->getResponse();
+			return $this->processResponse($response, $loapi, $payload, $f_request, $urltopost);
+		} else {
+			return (object)array('status' => 'error', 'message' => $this->error['server']);
+		}
 	}
 
 	// SMARTLOCKER UPDATE
