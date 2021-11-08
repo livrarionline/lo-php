@@ -32,7 +32,7 @@ class LO
 		self::registerAutoload('phpseclib');
 		self::registerAutoload('Curl');
 		//conectare la baza de date
-//		$this->conn = mysqli_connect('localhost', 'user', 'password', 'smartlocker') or die('Could not connect to DATABASE');
+		$this->conn = mysqli_connect('localhost', 'user', 'password', 'smartlocker') or die('Could not connect to DATABASE');
 	}
 
 	//setez cheia RSA
