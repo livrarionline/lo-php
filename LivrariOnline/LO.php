@@ -1,9 +1,10 @@
 <?php
+
 namespace LivrariOnline;
 
-use sylouuu\Curl\Method as Curl;
 use phpseclib\Crypt\AES as AES;
 use phpseclib\Crypt\RSA as RSA;
+use sylouuu\Curl\Method as Curl;
 
 class LO
 {
@@ -283,7 +284,7 @@ class LO
 				'longitudine' => $row['dp_gps_long'],
 				'tip'         => ($row['dp_tip'] == 1 ? 'Pachetomat' : 'Punct de ridicare'),
 				'orar'        => $row['orar'],
-				'disabled'    => ((int)$row['dp_active'] <= 0 ? true : false),
+				'disabled'    => (int)$row['dp_active'] <= 0,
 			);
 		}
 		return json_encode($delivery_point);
@@ -476,7 +477,7 @@ class LO
 
 		if ($request->getStatus() === 200) {
 			$response = $request->getResponse();
-			return $this->processResponse($response, $loapi, $payload, $f_request, $urltopost);
+			return $this->processResponse($response, $loapi);
 		} else {
 			return (object)array('status' => 'error', 'message' => $this->error['server']);
 		}
@@ -537,7 +538,7 @@ class LO
 							`dp_indicatii` = " . $delivery_point['dp_indicatii'] . ",
 							`termosensibil` = " . (int)$delivery_point['termosensibil'];
 
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
@@ -565,7 +566,7 @@ class LO
 							`day_active` = " . (int)$program['active'] . ",
 							`version_id` = " . (int)$program['versionid'] . ",
 							`day` = '" . $program['day_name'];
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
@@ -591,7 +592,7 @@ class LO
 							`active` = " . (int)$exceptie['active'] . ",
 							`version_id` = " . (int)$exceptie['versionid'];
 
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
@@ -616,6 +617,9 @@ class LO
 	// END SMARTLOCKER UPDATE
 
 	// SMARTLOCKER UPDATE cu notificare si preluare doar diferente
+	/**
+	 * @throws \Exception
+	 */
 	public function run_lockers_update_push()
 	{
 		$posted = file_get_contents('php://input');
@@ -639,7 +643,7 @@ class LO
 				$last_update = $result['last_update'];
 			} else {
 				$sql = "INSERT INTO lo_locker_push VALUES ('" . $last_update . "')";
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 
 			$lockers_data = $this->GetPachetomatePR(array('f_action' => 10, 'f_stamp' => $last_update));
@@ -698,7 +702,7 @@ class LO
 							`dp_indicatii` = " . $delivery_point['dp_indicatii'] . ",
 							`termosensibil` = " . (int)$delivery_point['termosensibil'];
 
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
@@ -726,7 +730,7 @@ class LO
 							`day_active` = " . (int)$program['active'] . ",
 							`version_id` = " . (int)$program['versionid'] . ",
 							`day` = '" . $program['day_name'];
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
@@ -752,13 +756,13 @@ class LO
 							`active` = " . (int)$exceptie['active'] . ",
 							`version_id` = " . (int)$exceptie['versionid'];
 
-				$query = mysqli_query($this->conn, $sql);
+				mysqli_query($this->conn, $sql);
 			}
 		}
 
 		// actualizez ultimul stamp de update
 		$sql = "UPDATE lo_locker_push SET last_update = now()";
-		$query = mysqli_query($this->conn, $sql);
+		mysqli_query($this->conn, $sql);
 	}
 
 	// END SMARTLOCKER UPDATE cu notificare si preluare doar diferente
@@ -767,9 +771,8 @@ class LO
 	// ISSN UPDATE ORDER STATUS
 	private function run_issn($f_crypt_message_issn)
 	{
-		$error = false;
 		$issn = $this->decrypt_ISSN($f_crypt_message_issn); //obiect decodat din JSON in clasa LO
-		if (!isset($issn) || empty($issn)) {
+		if (empty($issn)) {
 			die('Hacking attempt!');
 		}
 		//issn este un obiect, cu atributele: f_order_number, f_statusid, f_stamp, f_awb_collection (array de AWB-uri)
@@ -778,21 +781,18 @@ class LO
 		if (isset($issn->f_order_number)) {
 			$vF_Ref = $issn->f_order_number;
 		} else {
-			$error = true;
 			die('Parametrul f_order_number lipseste.');
 		}
 		//f_statusid
 		if (isset($issn->f_statusid)) {
 			$vF_statusid = $issn->f_statusid;
 		} else {
-			$error = true;
 			die('Parametrul f_statusid lipseste.');
 		}
 		// f_stamp
 		if (isset($issn->f_stamp)) {
 			$vF_stamp = $issn->f_stamp;
 		} else {
-			$error = true;
 			die('Parametrul f_stamp lipseste.');
 		}
 		// f_awb_collection
@@ -800,52 +800,50 @@ class LO
 			$vF_AWB = $issn->f_awb_collection; //array de awb-uri
 			$vF_AWB = $vF_AWB[0];
 		} else {
-			$error = true;
 			die('Parametrul f_awb lipseste.');
 		}
 		// Obtine order id
 		$raw_vF_Order_Number = explode('nr.', $vF_Ref);
 		$vF_Order_Number = trim($raw_vF_Order_Number[1]);
 
-		if (!$error) {
-			switch ($vF_statusid) {
-				case '100':
-					// Preluata de curier de la comerciant, de actualizat starea comenzii in sistem
-					break;
-				case '110':
-					// Preluata de curier din Smart Locker, de actualizat starea comenzii in sistem
-					break;
-				case '130':
-					// Predata in hub, de actualizat starea comenzii in sistem
-					break;
-				case '150':
-					// Preluata de curier din hub, de actualizat starea comenzii in sistem
-					break;
-				case '290':
-					// Predata in Smart Locker, de actualizat starea comenzii in sistem
-					break;
-				case '300':
-					// Livrata la destinatar, de actualizat starea comenzii in sistem
-					break;
-				case '600':
-					// Anulata, de actualizat starea comenzii in sistem
-					break;
-				case '900':
-					// Facturata, de actualizat starea comenzii in sistem
-					break;
-				case '1000':
-					// Finalizata, de actualizat starea comenzii in sistem
-					break;
+		switch ($vF_statusid) {
+			case '100':
+				// Preluata de curier de la comerciant, de actualizat starea comenzii in sistem
+				break;
+			case '110':
+				// Preluata de curier din Smart Locker, de actualizat starea comenzii in sistem
+				break;
+			case '130':
+				// Predata in hub, de actualizat starea comenzii in sistem
+				break;
+			case '150':
+				// Preluata de curier din hub, de actualizat starea comenzii in sistem
+				break;
+			case '290':
+				// Predata in Smart Locker, de actualizat starea comenzii in sistem
+				break;
+			case '300':
+				// Livrata la destinatar, de actualizat starea comenzii in sistem
+				break;
+			case '600':
+				// Anulata, de actualizat starea comenzii in sistem
+				break;
+			case '900':
+				// Facturata, de actualizat starea comenzii in sistem
+				break;
+			case '1000':
+				// Finalizata, de actualizat starea comenzii in sistem
+				break;
 
-			}
-			$raspuns_xml = '<?xml version="1.0" encoding="UTF-8" ?>';
-			$raspuns_xml .= '<issn>';
-			$raspuns_xml .= '<x_order_number>' . $issn->f_order_number . '</x_order_number>';
-			$raspuns_xml .= '<merchServerStamp>' . date("Y-m-dTH:m:s") . '</merchServerStamp>';
-			$raspuns_xml .= '<f_response_code>1</f_response_code>';
-			$raspuns_xml .= '</issn>';
-			echo $raspuns_xml;
 		}
+		$raspuns_xml = '<?xml version="1.0" encoding="UTF-8" ?>';
+		$raspuns_xml .= '<issn>';
+		$raspuns_xml .= '<x_order_number>' . $issn->f_order_number . '</x_order_number>';
+		$raspuns_xml .= '<merchServerStamp>' . date("Y-m-dTH:m:s") . '</merchServerStamp>';
+		$raspuns_xml .= '<f_response_code>1</f_response_code>';
+		$raspuns_xml .= '</issn>';
+		echo $raspuns_xml;
+
 	}
 	// END ISSN UPDATE ORDER STATUS
 
@@ -853,5 +851,3 @@ class LO
 	// 						END METODE PRIVATE					//
 	//////////////////////////////////////////////////////////////
 }
-
-?>
