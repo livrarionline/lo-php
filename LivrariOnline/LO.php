@@ -92,7 +92,6 @@ class LO
 	public function GenerateAwbSmartloker($f_request, $delivery_point_id, $rezervation_id, $order_id)
 	{
 		$f_request['dulapid'] = (int)$delivery_point_id;
-		$f_request['rezervationid'] = (int)$rezervation_id; // obtinut prin call-ul de rezervare prin metoda get_reservationid
 		$f_request['orderid'] = strval($order_id);
 
 		$sql = "SELECT * FROM lo_delivery_points where dp_id = " . $delivery_point_id;

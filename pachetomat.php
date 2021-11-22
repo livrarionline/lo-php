@@ -131,18 +131,6 @@ $lo->plus_expectedin(42, '10002222'); // 42 - dulapid, '10002222' - orderid
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// 										GET RESERVATION ID									//
-//////////////////////////////////////////////////////////////////////////////////////////////
-$reservation = $lo->get_reservationid(42, '10002222', 3); // 42 - dulapid, '10002222' - orderid, 3 - cellsize (1 -> L (440mm / 600mm / 611mm), 2 -> M (498mm / 600mm / 382mm), 3 -> S (498mm / 600mm / 300mm), 4 -> XL (600mm / 600mm / 600mm)) ;
-// raspuns JSON de forma {"status":"success","f_lockerid":42,"f_reservation_id":293}, vom folosi f_reservation_id la generarea de AWB
-$reservation = json_decode($reservation);
-$reservation_id = $reservation->f_reservation_id;
-//////////////////////////////////////////////////////////////////////////////////////////////
-// 									  END GET RESERVATION ID								//
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 // 						  		GENERARE AWB IN PACHETOMATUL 42								//
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -223,7 +211,7 @@ $f_request_awb['shipFROMaddress'] = array(
 
 
 //generare AWB pachetomat
-$response_awb = $lo->GenerateAwbSmartloker($f_request_awb, 42, $reservation_id, '10002222');  // 42 - dulapid, '10002222' - orderid
+$response_awb = $lo->GenerateAwbSmartloker($f_request_awb, 42, '10002222');  // 42 - dulapid, '10002222' - orderid
 
 //raspuns generare AWB pachetomat
 if (isset($response_awb->status) && $response_awb->status == 'error') {
