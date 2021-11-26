@@ -838,7 +838,7 @@ class LO
 		$raspuns_xml = '<?xml version="1.0" encoding="UTF-8" ?>';
 		$raspuns_xml .= '<issn>';
 		$raspuns_xml .= '<x_order_number>' . $issn->f_order_number . '</x_order_number>';
-		$raspuns_xml .= '<merchServerStamp>' . date("Y-m-dTH:m:s") . '</merchServerStamp>';
+		$raspuns_xml .= '<merchServerStamp>' . date("Y-m-dTH:i:s") . '</merchServerStamp>';
 		$raspuns_xml .= '<f_response_code>1</f_response_code>';
 		$raspuns_xml .= '</issn>';
 		echo $raspuns_xml;
