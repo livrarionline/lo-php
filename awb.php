@@ -73,15 +73,16 @@ $f_request_awb['destinatar'] = array(
 	'cui'          => '1234567'                                            //optional
 );
 
-$f_request_awb['shipTOaddress'] = array(                                                                            //Obligatoriu
-                                                                                                                    'address1'   => 'Str. 2 Cocosi 21',
-                                                                                                                    'address2'   => '',
-                                                                                                                    'city'       => 'Bucuresti',
-                                                                                                                    'state'      => 'Bucuresti',
-                                                                                                                    'zip'        => '800000',
-                                                                                                                    'country'    => 'Romania',
-                                                                                                                    'phone'      => '0740000000',
-                                                                                                                    'observatii' => 'Observatii de test',
+$f_request_awb['shipTOaddress'] = array(
+	//Obligatoriu
+	'address1'   => 'Str. 2 Cocosi 21',
+	'address2'   => '',
+	'city'       => 'Bucuresti',
+	'state'      => 'Bucuresti',
+	'zip'        => '800000',
+	'country'    => 'Romania',
+	'phone'      => '0740000000',
+	'observatii' => 'Observatii de test',
 );
 
 $f_request_awb['shipFROMaddress'] = array(
