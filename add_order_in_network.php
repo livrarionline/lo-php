@@ -10,10 +10,15 @@ $lo->setRSAKey('RSA KEY');        // din interfata de comerciant
 
 $f_request = array();
 $f_request['dulapid'] = (int)99999;
-$f_request['tip_celula'] = 'S';
-$f_request['orderid'] = 'order ID';
-$f_request['phone'] = '0740000000';
-$f_request['email'] = 'email@domain.com';
+$f_request['lungime'] = (int)1;
+$f_request['latime'] = (int)1;
+$f_request['inaltime'] = (int)1;
+$f_request['greutate'] = (float)1.0;
+$f_request['mpod_hash'] = 'hash';
+$f_request['awb'] = 'AWB';
+$f_request['orderid'] = 'Order ID';
+$f_request['phone'] = 'Customer phone';
+$f_request['email'] = 'Customer email';
 $f_request['name'] = 'Customer name';
 
 $response = $lo->AddOrderInNetwork($f_request);
