@@ -643,16 +643,14 @@ class LO
 			}
 
 			$lockers_data = $this->GetPachetomatePR(array('f_action' => 10, 'f_stamp' => $last_update));
-			if ($lockers_data->status == 'error') {
+			if (isset($lockers_data->status) && $lockers_data->status == 'error') {
 				throw new \Exception($lockers_data->message);
 			}
 		}
 
-		$lockers_data = (array)$lockers_data;
-
-		$lo_delivery_points = $lockers_data['dulap'];
-		$lo_dp_program = $lockers_data['zile2dulap'];
-		$lo_dp_exceptii = $lockers_data['exceptii_zile'];
+		$lo_delivery_points = $lockers_data->dulap;
+		$lo_dp_program = $lockers_data->zile2dulap;
+		$lo_dp_exceptii = $lockers_data->exceptii_zile;
 
 		if (!empty($lo_delivery_points)) {
 			foreach ($lo_delivery_points as $delivery_point) {
@@ -672,32 +670,34 @@ class LO
 							dp_indicatii, 
 							termosensibil)
 						VALUES
-							(" . (int)$delivery_point['dulapid'] . ",
-							'" . $delivery_point['denumire'] . "',
-							'" . $delivery_point['adresa'] . "',
-							'" . $delivery_point['judet'] . "',
-							'" . $delivery_point['oras'] . "',
-							'" . $delivery_point['tara'] . "',
-							" . (float)$delivery_point['latitudine'] . ",
-							" . (float)$delivery_point['longitudine'] . ",
-							" . (int)$delivery_point['tip_dulap'] . ",
-							" . (int)$delivery_point['active'] . ",
-							" . (int)$delivery_point['versionid'] . ")
+							(" . (int)$delivery_point->dulapid . ",
+							'" . $delivery_point->denumire . "',
+							'" . $delivery_point->adresa . "',
+							'" . $delivery_point->judet . "',
+							'" . $delivery_point->oras . "',
+							'" . $delivery_point->tara . "',
+							" . (float)$delivery_point->latitudine . ",
+							" . (float)$delivery_point->longitudine . ",
+							" . (int)$delivery_point->tip_dulap . ",
+							" . (int)$delivery_point->active . ",
+							" . (int)$delivery_point->versionid . ",
+							" . (float)$delivery_point->dp_temperatura . ",
+							'" . $delivery_point->dp_indicatii . "',
+							" . (int)$delivery_point->termosensibil.")
 						ON DUPLICATE KEY UPDATE 
-							`dp_denumire` = '" . $delivery_point['denumire'] . "',
-							`dp_adresa` = '" . $delivery_point['adresa'] . "',
-							`dp_judet` = '" . $delivery_point['judet'] . "',
-							`dp_oras` = '" . $delivery_point['oras'] . "',
-							`dp_tara` = '" . $delivery_point['tara'] . "',
-							`dp_gps_lat` = " . (float)$delivery_point['latitudine'] . ",
-							`dp_gps_long` = " . (float)$delivery_point['longitudine'] . ",
-							`dp_tip` = " . (int)$delivery_point['tip_dulap'] . ",
-							`dp_active` = " . (int)$delivery_point['active'] . ",
-							`version_id` = " . (int)$delivery_point['versionid'] . ",
-							`dp_temperatura` = " . (float)$delivery_point['dp_temperatura'] . ",
-							`dp_indicatii` = " . $delivery_point['dp_indicatii'] . ",
-							`termosensibil` = " . (int)$delivery_point['termosensibil'];
-
+							`dp_denumire` = '" . $delivery_point->denumire . "',
+							`dp_adresa` = '" . $delivery_point->adresa . "',
+							`dp_judet` = '" . $delivery_point->judet . "',
+							`dp_oras` = '" . $delivery_point->oras . "',
+							`dp_tara` = '" . $delivery_point->tara . "',
+							`dp_gps_lat` = " . (float)$delivery_point->latitudine . ",
+							`dp_gps_long` = " . (float)$delivery_point->longitudine . ",
+							`dp_tip` = " . (int)$delivery_point->tip_dulap . ",
+							`dp_active` = " . (int)$delivery_point->active . ",
+							`version_id` = " . (int)$delivery_point->versionid . ",
+							`dp_temperatura` = " . (float)$delivery_point->dp_temperatura . ",
+							`dp_indicatii` = '" . $delivery_point->dp_indicatii . "',
+							`termosensibil` = " . (int)$delivery_point->termosensibil;
 				mysqli_query($this->conn, $sql);
 			}
 		}
@@ -713,19 +713,19 @@ class LO
 							`day_number`,
 							`day`)
 						VALUES
-							('" . $program['start_program'] . "',
-							'" . $program['end_program'] . "',
-							" . (int)$program['dulapid'] . ",
-							" . (int)$program['active'] . ",
-							" . (int)$program['versionid'] . ",
-							" . (int)$program['day_number'] . ",
-							'" . $program['day_name'] . "')
+							('" . $program->start_program . "',
+							'" . $program->end_program . "',
+							" . (int)$program->dulapid . ",
+							" . (int)$program->active . ",
+							" . (int)$program->versionid . ",
+							" . (int)$program->day_number . ",
+							'" . $program->day_name . "')
 						ON DUPLICATE KEY UPDATE 
-							`dp_start_program` = '" . $program['start_program'] . "',
-							`dp_end_program` = '" . $program['end_program'] . "',
-							`day_active` = " . (int)$program['active'] . ",
-							`version_id` = " . (int)$program['versionid'] . ",
-							`day` = '" . $program['day_name'];
+							`dp_start_program` = '" . $program->start_program . "',
+							`dp_end_program` = '" . $program->end_program . "',
+							`day_active` = " . (int)$program->active . ",
+							`version_id` = " . (int)$program->versionid . ",
+							`day` = '" . $program->day_name. "'";
 				mysqli_query($this->conn, $sql);
 			}
 		}
@@ -740,17 +740,17 @@ class LO
 							`version_id`,
 							`exception_day`)
 						VALUES
-							('" . $exceptie['start_program'] . "',
-							'" . $exceptie['end_program'] . "',
-							" . (int)$exceptie['dulapid'] . ",
-							" . (int)$exceptie['active'] . ",
-							" . (int)$exceptie['versionid'] . ",
-							'" . $exceptie['ziua'] . "')
+							('" . $exceptie->start_program . "',
+							'" . $exceptie->end_program . "',
+							" . (int)$exceptie->dulapid . ",
+							" . (int)$exceptie->active . ",
+							" . (int)$exceptie->versionid . ",
+							'" . $exceptie->ziua . "')
 						ON DUPLICATE KEY UPDATE 
-							`dp_start_program` = '" . $exceptie['start_program'] . "',
-							`dp_end_program` = '" . $exceptie['end_program'] . "',
-							`active` = " . (int)$exceptie['active'] . ",
-							`version_id` = " . (int)$exceptie['versionid'];
+							`dp_start_program` = '" . $exceptie->start_program . "',
+							`dp_end_program` = '" . $exceptie->end_program . "',
+							`active` = " . (int)$exceptie->active . ",
+							`version_id` = " . (int)$exceptie->versionid;
 
 				mysqli_query($this->conn, $sql);
 			}
