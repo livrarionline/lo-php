@@ -8,7 +8,6 @@ CREATE TABLE `lo_delivery_points` (
   `dp_judet` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dp_oras` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dp_tara` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `dp_cod_postal` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dp_gps_lat` double NOT NULL,
   `dp_gps_long` double NOT NULL,
   `dp_tip` int(11) DEFAULT 1,
