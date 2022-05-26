@@ -623,9 +623,6 @@ class LO
 	{
 		$posted = file_get_contents('php://input');
 
-		$this->f_login = (int)99999;
-		$this->setRSAKey('rsa_key');
-
 		$lockers_data = $this->decrypt_ISSN($posted);
 		if (is_null($lockers_data)) {
 			die('Nu am putut decripta payload-ul');
