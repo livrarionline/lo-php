@@ -144,7 +144,7 @@ $f_request_tracking = array('awb' => $response_awb->f_awb_collection[0]);
 $response_tracking = $lo->Tracking($f_request_tracking);
 
 // raspuns TRACKING
-if ($response_tracking->status == 'error') {
+if (isset($response_tracking->status) && $response_tracking->status == 'error') {
 	echo $response_tracking->message;
 } else {
 	$stare_curenta = $response_tracking->f_stare_curenta;
