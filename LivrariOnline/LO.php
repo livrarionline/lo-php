@@ -92,7 +92,7 @@ class LO
 	public function GenerateAwbSmartloker($f_request, $delivery_point_id, $rezervation_id, $order_id)
 	{
 		$f_request['dulapid'] = (int)$delivery_point_id;
-		$f_request['orderid'] = strval($order_id);
+		$f_request['orderid'] = (string)$order_id;
 
 		$sql = "SELECT * FROM lo_delivery_points where dp_id = " . $delivery_point_id;
 		$query = mysqli_query($this->conn, $sql);
@@ -353,9 +353,6 @@ class LO
 			case "mozilla/5.0 (livrarionline.ro locker push service aes)":
 				$this->run_lockers_update_push();
 				break;
-			case "mozilla/5.0 (livrarionline.ro locker update service aes)":
-				$this->run_lockers_update();
-				break;
 			default:
 				if (empty($_POST['F_CRYPT_MESSAGE_ISSN'])) {
 					die('F_CRYPT_MESSAGE_ISSN nu a fost trimis');
@@ -481,139 +478,6 @@ class LO
 			return (object)array('status' => 'error', 'message' => $this->error['server']);
 		}
 	}
-
-	// SMARTLOCKER UPDATE
-	private function run_lockers_update()
-	{
-		$posted_json = file_get_contents('php://input');
-		$lockers_data = json_decode($posted_json, true);
-
-		$login_id = $lockers_data['merchid'];
-		$lo_delivery_points = $lockers_data['dulap'];
-		$lo_dp_program = $lockers_data['zile2dulap'];
-		$lo_dp_exceptii = $lockers_data['exceptii_zile'];
-
-		if (!empty($lo_delivery_points)) {
-			foreach ($lo_delivery_points as $delivery_point) {
-				$sql = "INSERT INTO `lo_delivery_points`
-							(`dp_id`,
-							`dp_denumire`,
-							`dp_adresa`,
-							`dp_judet`,
-							`dp_oras`,
-							`dp_tara`,
-							`dp_gps_lat`,
-							`dp_gps_long`,
-							`dp_tip`,
-							`dp_active`,
-							`version_id`,
-							dp_temperatura, 
-							dp_indicatii, 
-							termosensibil)
-						VALUES
-							(" . (int)$delivery_point['dulapid'] . ",
-							'" . $delivery_point['denumire'] . "',
-							'" . $delivery_point['adresa'] . "',
-							'" . $delivery_point['judet'] . "',
-							'" . $delivery_point['oras'] . "',
-							'" . $delivery_point['tara'] . "',
-							" . (float)$delivery_point['latitudine'] . ",
-							" . (float)$delivery_point['longitudine'] . ",
-							" . (int)$delivery_point['tip_dulap'] . ",
-							" . (int)$delivery_point['active'] . ",
-							" . (int)$delivery_point['versionid'] . ")
-						ON DUPLICATE KEY UPDATE 
-							`dp_denumire` = '" . $delivery_point['denumire'] . "',
-							`dp_adresa` = '" . $delivery_point['adresa'] . "',
-							`dp_judet` = '" . $delivery_point['judet'] . "',
-							`dp_oras` = '" . $delivery_point['oras'] . "',
-							`dp_tara` = '" . $delivery_point['tara'] . "',
-							`dp_gps_lat` = " . (float)$delivery_point['latitudine'] . ",
-							`dp_gps_long` = " . (float)$delivery_point['longitudine'] . ",
-							`dp_tip` = " . (int)$delivery_point['tip_dulap'] . ",
-							`dp_active` = " . (int)$delivery_point['active'] . ",
-							`version_id` = " . (int)$delivery_point['versionid'] . ",
-							`dp_temperatura` = " . (float)$delivery_point['dp_temperatura'] . ",
-							`dp_indicatii` = " . $delivery_point['dp_indicatii'] . ",
-							`termosensibil` = " . (int)$delivery_point['termosensibil'];
-
-				mysqli_query($this->conn, $sql);
-			}
-		}
-
-		if (!empty($lo_dp_program)) {
-			foreach ($lo_dp_program as $program) {
-				$sql = "INSERT INTO `lo_dp_program`
-							(`dp_start_program`,
-							`dp_end_program`,
-							`dp_id`,
-							`day_active`,
-							`version_id`,
-							`day_number`,
-							`day`)
-						VALUES
-							('" . $program['start_program'] . "',
-							'" . $program['end_program'] . "',
-							" . (int)$program['dulapid'] . ",
-							" . (int)$program['active'] . ",
-							" . (int)$program['versionid'] . ",
-							" . (int)$program['day_number'] . ",
-							'" . $program['day_name'] . "')
-						ON DUPLICATE KEY UPDATE 
-							`dp_start_program` = '" . $program['start_program'] . "',
-							`dp_end_program` = '" . $program['end_program'] . "',
-							`day_active` = " . (int)$program['active'] . ",
-							`version_id` = " . (int)$program['versionid'] . ",
-							`day` = '" . $program['day_name'];
-				mysqli_query($this->conn, $sql);
-			}
-		}
-
-		if (!empty($lo_dp_exceptii)) {
-			foreach ($lo_dp_exceptii as $exceptie) {
-				$sql = "INSERT INTO `lo_dp_day_exceptions`
-							(`dp_start_program`,
-							`dp_end_program`,
-							`dp_id`,
-							`active`,
-							`version_id`,
-							`exception_day`)
-						VALUES
-							('" . $exceptie['start_program'] . "',
-							'" . $exceptie['end_program'] . "',
-							" . (int)$exceptie['dulapid'] . ",
-							" . (int)$exceptie['active'] . ",
-							" . (int)$exceptie['versionid'] . ",
-							'" . $exceptie['ziua'] . "')
-						ON DUPLICATE KEY UPDATE 
-							`dp_start_program` = '" . $exceptie['start_program'] . "',
-							`dp_end_program` = '" . $exceptie['end_program'] . "',
-							`active` = " . (int)$exceptie['active'] . ",
-							`version_id` = " . (int)$exceptie['versionid'];
-
-				mysqli_query($this->conn, $sql);
-			}
-		}
-
-		$sql = "SELECT
-					COALESCE(MAX(dp.version_id), 0) AS max_dulap_id,
-					COALESCE(MAX(dpp.version_id), 0) AS max_zile2dp,
-				    COALESCE(MAX(dpe.version_id), 0) AS max_exceptii_zile
-				FROM
-					lo_delivery_points dp
-					LEFT join lo_dp_program dpp ON dpp.dp_id = dp.dp_id
-					LEFT join lo_dp_day_exceptions dpe ON dpe.dp_id = dp.dp_id";
-		$query = mysqli_query($this->conn, $sql);
-		$row = mysqli_fetch_array($query);
-
-		$response['merch_id'] = (int)$login_id;
-		$response['max_dulap_id'] = (int)$row['max_dulap_id'];
-		$response['max_zile2dp'] = (int)$row['max_zile2dp'];
-		$response['max_exceptii_zile'] = (int)$row['max_exceptii_zile'];
-
-		echo json_encode($response);
-	}
-	// END SMARTLOCKER UPDATE
 
 	// SMARTLOCKER UPDATE cu notificare si preluare doar diferente
 	/**
